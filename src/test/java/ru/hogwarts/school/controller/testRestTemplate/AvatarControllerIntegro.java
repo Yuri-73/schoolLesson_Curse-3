@@ -12,21 +12,29 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.*;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import ru.hogwarts.school.controller.AvatarController;
 
 
 import ru.hogwarts.school.model.Avatar;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.StudentRepository;
 import ru.hogwarts.school.service.StudentAvatarService;
 import ru.hogwarts.school.service.StudentService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 
+import static jdk.dynalink.linker.support.Guards.isNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -68,20 +76,32 @@ public class AvatarControllerIntegro {
         Assertions.assertThat(avatarController).isNotNull();
     }
 
-    //Это чепуха, но работает: не подан в URL файл
-    @Test
-    public void testUploadAvatar() throws IOException {
-        Student student = new Student(1L, "Nikolay", 30);
-        byte[] bytes = Files.readAllBytes(Path.of("src/test/resources/test.jpg"));
-        Avatar avatar = new Avatar();
-        avatar.setData(bytes);
-        avatar.setFilePath("/1L.pdf");
-        avatar.setFileSize(11L);
-        avatar.setStudent(student);
-        avatar.setMediaType(".pdf");
-
-        Assertions
-                .assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/" + student.getId() + "/avatar", String.class))
-                .isNotNull();
-    }
+//    @Test
+//    public void testUploadAvatar() throws IOException {
+//        Student student = new Student(1L, "Nikolay", 30);
+//        studentRepository.save(student);
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//        File file = new File("src/test/resources/test.jpg");
+//        byte[] avatarContent = Files.readAllBytes(new ClassPathResource("/src/test/resources/test.jpg").getFile().toPath());
+//
+//        Avatar avatar = new Avatar();
+//        avatar.setData(avatarContent);
+//        avatar.setFilePath("/1.jpg");
+//        avatar.setFileSize(11L);
+//        avatar.setStudent(student);
+//        avatar.setMediaType("image/jpg");
+//
+//        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+//        body.add("avatars", new org.springframework.core.io.ByteArrayResource(avatarContent) {
+//            @Override
+//            public String getFilename() {
+//                return "test.jpg";
+//            }
+//        });
+//        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+//        ResponseEntity<String> response = restTemplate.exchange(baseUrl + student.getId() + "/avatar", HttpMethod.POST, requestEntity, String.class);
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//    }
 }

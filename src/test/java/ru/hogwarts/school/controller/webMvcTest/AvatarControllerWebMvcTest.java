@@ -1,5 +1,6 @@
 package ru.hogwarts.school.controller.webMvcTest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.hogwarts.school.controller.AvatarController;
 import ru.hogwarts.school.model.Avatar;
 import ru.hogwarts.school.model.Student;
@@ -69,7 +71,7 @@ public class AvatarControllerWebMvcTest {
     @InjectMocks
     private AvatarController avatarController;
 
-//    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     //ДЗ-3.6(1)
     @Test
@@ -212,7 +214,9 @@ public class AvatarControllerWebMvcTest {
                 .andExpect(jsonPath("$[0].filePath").value("/1L.pdf"))
                 .andExpect(jsonPath("$[1].filePath").value("/2L.pdf"))
                 .andExpect(jsonPath("$[0].student.id").value(1l))
-                .andExpect(jsonPath("$[1].student.id").value(2l));
+                .andExpect(jsonPath("$[1].student.id").value(2l))
+                //Ещё один способ - через маппер:
+                .andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(list)));
     }
 
     //ДЗ-4.1(недопустимые параметры на входе)
