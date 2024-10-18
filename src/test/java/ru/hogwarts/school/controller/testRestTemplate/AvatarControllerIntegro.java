@@ -13,6 +13,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,12 +25,12 @@ import ru.hogwarts.school.controller.AvatarController;
 import ru.hogwarts.school.model.Avatar;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.StudentAvatarRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 import ru.hogwarts.school.service.StudentAvatarService;
 import ru.hogwarts.school.service.StudentService;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -52,10 +53,13 @@ public class AvatarControllerIntegro {
     @Autowired
     private StudentRepository studentRepository;
 
-    @MockBean
-    private StudentAvatarService studentAvatarService;
+    @Autowired
+    private StudentAvatarRepository studentAvatarRepository;
 
-    @MockBean
+    @Autowired
+    private StudentAvatarService out;
+
+    @Autowired
     private StudentService studentService;
 
     private String baseUrl;
@@ -69,6 +73,7 @@ public class AvatarControllerIntegro {
         student.setName("Тестовый");
         student.setAge(20);
         studentRepository.save(student);
+
     }
 
     @Test
@@ -78,12 +83,26 @@ public class AvatarControllerIntegro {
 
 //    @Test
 //    public void testUploadAvatar() throws IOException {
+//        final String path = "./src/test/resources";
+//        byte[] image;
+//
+//
+//
+//        out = new StudentAvatarService(studentService, studentAvatarRepository, path);
 //        Student student = new Student(1L, "Nikolay", 30);
 //        studentRepository.save(student);
 //
+//        try (InputStream is = Files.newInputStream(Path.of(path + "/test.jpg"));  //открываем поток из файла, нах-ся в директории теста проекта
+//             BufferedInputStream bis = new BufferedInputStream(is, 1024);
+//             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        ) {
+//            bis.transferTo(baos);
+//            this.image = baos.toByteArray(); //укладываем в массив байт
+//        }
+//
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//        File file = new File("src/test/resources/test.jpg");
+//        File file = new File("/src/test/resources/test.jpg");
 //        byte[] avatarContent = Files.readAllBytes(new ClassPathResource("/src/test/resources/test.jpg").getFile().toPath());
 //
 //        Avatar avatar = new Avatar();
@@ -94,14 +113,9 @@ public class AvatarControllerIntegro {
 //        avatar.setMediaType("image/jpg");
 //
 //        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        body.add("avatars", new org.springframework.core.io.ByteArrayResource(avatarContent) {
-//            @Override
-//            public String getFilename() {
-//                return "test.jpg";
-//            }
-//        });
+//        body.add("avatars", new FileSystemResource("/src/test/resources/test.jpg"));
 //        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-//        ResponseEntity<String> response = restTemplate.exchange(baseUrl + student.getId() + "/avatar", HttpMethod.POST, requestEntity, String.class);
+//        ResponseEntity<String> response = restTemplate.exchange("/" + student.getId() + "/avatar", HttpMethod.POST, requestEntity, String.class);
 //        assertEquals(HttpStatus.OK, response.getStatusCode());
 //    }
 }

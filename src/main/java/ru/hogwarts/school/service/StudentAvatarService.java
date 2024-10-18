@@ -1,5 +1,7 @@
 package ru.hogwarts.school.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,13 +33,17 @@ public class StudentAvatarService {
     private final StudentService studentService;
     private final StudentAvatarRepository studentAvatarRepository;
 
+    private final Logger logger = LoggerFactory.getLogger(StudentAvatarService.class); //ДЗ-4.6 Включение логирования результатов
+
     public StudentAvatarService(StudentService studentService, StudentAvatarRepository studentAvatarRepository, @Value("${students.avatar.dir.path}") String avatarsDir) {
+        logger.info("The constructor of the StudentAvatarService class is launched");
         this.studentService = studentService;
         this.studentAvatarRepository = studentAvatarRepository;
         this.avatarsDir = avatarsDir;
     }
 
     public void uploadAvatar(Long id, MultipartFile file) throws IOException { // Метод входного потока для загрузки файла картинки
+        logger.info("Was invoked method for uploadAvatar");
         // на указанное место на диске и в БД одновременно
         Student student = studentService.findStudent(id); // Находим объект студента по id.
 
@@ -66,15 +72,17 @@ public class StudentAvatarService {
     }
 
     public Avatar findAvatar(Long id) {
+        logger.info("Was invoked method for findAvatar");
         Student student = studentService.findStudent(id); //Чтобы не выдавал 500, если нет в базе такого студента
+        logger.debug("student found in the Database");
         return studentAvatarRepository.findByStudentId(id).orElse(new Avatar()); // Этот метод в репозитории следует писать
     }
 
     public byte[] generateImagePreview(Path filePath) throws IOException { //Метод уменьшения картинки для БД
+        logger.info("Was invoked method for generate Image Preview");
         try (InputStream is = Files.newInputStream(filePath);
-
-             BufferedInputStream bis = new BufferedInputStream(is, 1024);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            BufferedInputStream bis = new BufferedInputStream(is, 1024);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             BufferedImage image = ImageIO.read(bis);
             int height = image.getHeight() / (image.getHeight() / 100);
             BufferedImage date = new BufferedImage(100, height, image.getType());
@@ -88,11 +96,13 @@ public class StudentAvatarService {
     }
 
     private String getExtension(String filename) {
+        logger.info("Was invoked method for getExtension avatar");
         return filename.substring(filename.lastIndexOf(".") + 1);
     } //Определение формата расширения файла
 
     // Пагинация шаг 2 ДЗ-4.1 всего 1 метод: постраничный вывод аватарок:
     public List<Avatar> getAllAvatarsPage(Integer pageNumber, Integer pageSize) {
+        logger.info("Was invoked method for getAllavatar avatar");
         PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize);
         return studentAvatarRepository.findAll(pageRequest).getContent();
     }
