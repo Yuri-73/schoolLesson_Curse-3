@@ -440,6 +440,7 @@ class StudentControllerIntegro {
         //check:
         Assertions.assertThat(students).isNull();
         Assertions.assertThat(result.getStatusCode().toString()).isEqualTo("404 NOT_FOUND");
+        Assertions.assertThat(result.getStatusCodeValue()).isEqualTo(404); //Можно и так
     }
 
     @Test
@@ -471,7 +472,7 @@ class StudentControllerIntegro {
     }
 
     @Test
-    public void getSumStreamParallelTest() {
+    public void getSumStreamParallel_Test() {
         //initial data:
         Integer summary = Stream.iterate(1, a -> a + 1)
                 .limit(1_000_000)
@@ -481,6 +482,61 @@ class StudentControllerIntegro {
         //check:
         Assertions.assertThat(result).isNotNull();
         Assertions.assertThat(result).isEqualTo(summary);
+    }
+
+    @Test
+    public void printStudentNamesThread_Test() {  ////Тест по выводу студентов в 3-х потоках без синхронизации
+        //initial data:
+        Student s1 = restTemplate.postForObject("/student", student("st1", 16), Student.class);
+        Student s2 = restTemplate.postForObject("/student", student("st2", 17), Student.class);
+        Student s3 = restTemplate.postForObject("/student", student("st3", 28), Student.class);
+        Student s4 = restTemplate.postForObject("/student", student("st4", 19), Student.class);
+        Student s5 = restTemplate.postForObject("/student", student("st5", 38), Student.class);
+        Student s6 = restTemplate.postForObject("/student", student("st6", 38), Student.class);
+        //test:
+        String result = restTemplate.getForObject("/student/print-parallel", String.class);
+        System.out.println("result: " +result);
+        //check:
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo("Старт процесса без синхронизатора");
+    }
+
+    @Test
+    public void printStudentNamesThread_EmptyList_Test() {  //Тест при параллельных потоках без коллекции студентов
+        //test:
+        ResponseEntity<String> result = restTemplate.exchange("/student/print-parallel",
+                HttpMethod.GET, null, String.class);
+        //check:
+        Assertions.assertThat(result.getBody()).isNull();
+        Assertions.assertThat(result.getStatusCode().toString()).isEqualTo("404 NOT_FOUND");
+        Assertions.assertThat(result.getStatusCodeValue()).isEqualTo(404); //Можно и так
+    }
+
+    @Test
+    public void printStudentNamesThreadSynchronization_Test() {  //Тест по синхронизации вывода студентов
+        //initial data:
+        Student s1 = restTemplate.postForObject("/student", student("st1", 16), Student.class);
+        Student s2 = restTemplate.postForObject("/student", student("st2", 17), Student.class);
+        Student s3 = restTemplate.postForObject("/student", student("st3", 28), Student.class);
+        Student s4 = restTemplate.postForObject("/student", student("st4", 19), Student.class);
+        Student s5 = restTemplate.postForObject("/student", student("st5", 38), Student.class);
+        Student s6 = restTemplate.postForObject("/student", student("st6", 38), Student.class);
+        //test:
+        String result = restTemplate.getForObject("/student/print-synchronized", String.class);
+        //check:
+        Assertions.assertThat(result).isNotNull();
+        Assertions.assertThat(result).isEqualTo("Старт процесса с синхронизатором");
+    }
+
+    @Test
+    public void printStudentNamesThreadSynchronization_EmptyList_Test() {  //Тест при синхронизации без коллекции студентов
+        //test:
+        ResponseEntity<String> result = restTemplate.exchange("/student/print-synchronized",
+                HttpMethod.GET, null, String.class);
+        //check:
+        Assertions.assertThat(result.getBody()).isNull();
+        Assertions.assertThat(result.getStatusCode().toString()).isEqualTo("404 NOT_FOUND");
+        Assertions.assertThat(result.getStatusCodeValue()).isEqualTo(404); //Можно и так
     }
 }
 

@@ -1,5 +1,6 @@
 package ru.hogwarts.school.service;
 
+import net.bytebuddy.implementation.bind.annotation.Empty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class StudentService {
     private final StudentRepository studentRepository;
 
     private final Logger logger = LoggerFactory.getLogger(FacultyService.class); //ДЗ-4.6 Включение логирования результатов для студента
+    private final Object flag = new Object(); //ДЗ-4.6 Потоки
 
     public StudentService(StudentRepository studentRepository) {
         logger.info("The constructor of the StudentService class is launched");
@@ -168,6 +170,71 @@ public class StudentService {
         System.out.println("Время суммирования без использования стрима составило: " + (System.currentTimeMillis() - start) + " мс");
 
         return result;
+    }
+
+    //ДЗ-4.6 Потоки
+    //Шаг 1: Несинхронизированный вывод студентов в 3-х параллельных потоках (вперемешку):
+    public String getNameAllStudentsThread() {
+        List<Student> students = studentRepository.findAll();
+        if (students.isEmpty()) {
+            return null;
+        }
+        List<String> studentName = students.stream()
+                .map(Student::getName)
+                .collect(Collectors.toList());
+        studentName.forEach(i -> System.out.println(i));
+        System.out.println("Запуск метода несинхронизированных потоков getNameAllStudentsThread():");
+
+        System.out.println("Основной поток:");
+        studentName.stream().limit(2).forEach(System.out::println);
+
+        new Thread(() -> {
+            System.out.println("Первый дочерний поток:");
+            studentName.stream().skip(2).limit(2).forEach(System.out::println);
+        }).start();
+
+        new Thread(() -> {
+            System.out.println("Второй дочерний поток:");
+            studentName.stream().skip(4).limit(2).forEach(System.out::println);
+        }).start();
+
+        return students.toString();
+    }
+
+    //Шаг 2: Синхронизированный вывод студентов в 3-х параллельных потоках (но в соответствии с очерёдностью вывода через getAllStudent()):
+    public String getNameAllStudentsThreadSynchronization() {
+        List<Student> students = studentRepository.findAll();
+        if (students.isEmpty()) {
+            return null;
+        }
+        System.out.println("Запуск метода синхронизированных потоков getNameAllStudentsThreadSynchronization():");
+
+        System.out.println("Основной поток:");
+        synchronizePart(students, 0);
+        synchronizePart(students, 1);
+
+        new Thread(() -> {
+            System.out.println("Первый дочерний поток:");
+            synchronizePart(students, 2);
+            synchronizePart(students, 3);
+        }).start();
+
+        new Thread(() -> {
+            System.out.println("Второй дочерний поток:");
+            synchronizePart(students, 4);
+            synchronizePart(students, 5);
+        }).start();
+
+        return students.toString();
+    }
+
+    //Метод к ДЗ-4.6 с блоком синхронизации для getNameAllStudentsThreadSynchronization():
+    private void synchronizePart(List<Student> students, int index) {
+        synchronized (flag) {
+            if (index >= 0 && index < students.size()) {
+                System.out.println(students.get(index).getName());
+            }
+        }
     }
 }
 

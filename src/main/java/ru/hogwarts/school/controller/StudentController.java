@@ -129,5 +129,24 @@ public class StudentController {
     public Integer getSumStreamParallel() {
         return studentService.getIntegerParallelStream();
     }
+
+    //ДЗ-4.6: Потоки
+    //Шаг 1: Несинхронизированный вывод студентов в 3-х параллельных потоках (вперемешку):
+    @GetMapping("/print-parallel")
+    public ResponseEntity<String> printStudentNamesThread() {
+        String getNameAllStudentsThread = studentService.getNameAllStudentsThread();
+        if (getNameAllStudentsThread == null)
+            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok("Старт процесса без синхронизатора");
+    }
+
+    //Шаг 2: Синхронизированный вывод студентов в 3-х параллельных потоках:
+    @GetMapping("/print-synchronized")
+    public ResponseEntity<String> printStudentNamesThreadSynchronization() {
+        String getNameAllStudentsThreadSynchronization = studentService.getNameAllStudentsThreadSynchronization();
+        if (getNameAllStudentsThreadSynchronization == null)
+            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok("Старт процесса с синхронизатором");
+    }
 }
 
